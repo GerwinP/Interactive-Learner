@@ -10,15 +10,29 @@ import java.util.List;
 public class Classifier {
 
     private Tokenizer tokenizer;
+    private static final String prefix = "files/";
+    private String filename;
+    private String classifier;
 
     public static void main(String[] args) {
-        Classifier classifier = new Classifier();
-        List<String> tokens = classifier.textTokenizer("files/test.txt");
+        Classifier classifier = new Classifier("test.txt");
+        List<String> tokens = classifier.textTokenizer(classifier.filename);
         System.out.println(tokens);
     }
 
-    public Classifier() {
+    public Classifier(String filename) {
         tokenizer = new Tokenizer();
+        this.filename = filename;
+    }
+
+    public void classify(String filename, String classifier) {
+        this.classifier = classifier;
+
+    }
+
+    public boolean addToVocab(List<String> words) {
+
+        return false;
     }
 
     /**
@@ -29,7 +43,7 @@ public class Classifier {
     public List<String> textTokenizer(String filename) {
         String content = "";
         try {
-            content = readFile(filename);
+            content = readFile(prefix + filename);
             System.out.println(content);
         } catch (java.io.IOException e) {
             System.out.println(e.toString());
@@ -58,6 +72,5 @@ public class Classifier {
         } finally {
             bufferedReader.close();
         }
-
     }
 }

@@ -59,7 +59,7 @@ public class Tokenizer {
      * @return returns the string without the punctuation
      */
     public static String removePunctuation(String token) {
-        token = token.replaceAll("([a-z]+)[?:!.,;]*", "$1");
+        token = token.replaceAll("([a-z,]+)[?:!.,;]*", "$1");
         return token;
     }
 
