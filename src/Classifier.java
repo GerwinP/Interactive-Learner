@@ -30,7 +30,7 @@ public class Classifier {
 
     }
 
-    public boolean addToVocab(List<String> words) {
+    public boolean addToVocab(List<String> words, String value) {
 
         return false;
     }
