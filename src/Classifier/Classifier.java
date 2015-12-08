@@ -1,10 +1,10 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.file.CopyOption;
+package classifier;
+
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -16,6 +16,8 @@ public class Classifier {
 
     private Tokenizer tokenizer;
     private static final String prefix = "files/";
+    private static final String vocabPrefix = "vocabs/";
+    private static final String vocabFile = "vocab.txt";
     private String filename;
     private String value;
     private String classifier;
@@ -27,7 +29,7 @@ public class Classifier {
         System.out.println(tokens);
     }
 
-    public Classifier (String filename, String classifier, String value) {
+    public Classifier(String filename, String classifier, String value) {
         this.filename = filename;
         this.classifier = classifier;
         this.value = value;
@@ -48,12 +50,20 @@ public class Classifier {
         this.value = reader.next();
     }
 
-    public Classifier (String filename) {
+    public Classifier(String filename) {
         tokenizer = new Tokenizer();
         this.filename = filename;
     }
 
-    public void classify () {
+    public void classify (List<String> tokens, String classifier) {
+        this.classifier = classifier;
+        for (String token: tokens) {
+
+        }
+
+    }
+
+    public void moveFile () {
         try {
             Path path = Paths.get(prefix + classifier + "/" + value);
             if (Files.notExists(path) && (classifier != null || value != null)) {
@@ -65,9 +75,39 @@ public class Classifier {
         }
     }
 
-    public boolean addToVocab (List<String> words, String value) {
+    public List<String> getVocabList (String value) throws IOException {
+        List<String> vocabTokens = new LinkedList<>();
+        Scanner scanner = new Scanner(new File(vocabPrefix + classifier + "/" + value + "/" + vocabFile));
+        while (scanner.hasNext()) {
+            vocabTokens.add(scanner.next());
+        }
+        return vocabTokens;
+    }
 
-        return false;
+    public boolean addToVocab (List<String> words, String value) throws IOException {
+        File file = new File(vocabPrefix + classifier + "/" + value + "/" + vocabFile);
+        List<String> vocab = new LinkedList<String>();
+        if (file.exists() && !file.isDirectory()) {
+            vocab = getVocabList(value);
+        }
+        if (vocab != null) {
+            for (String word : words) {
+                if (!vocab.contains(word)) {
+                    vocab.add(word);
+                }
+            }
+        }
+        try {
+            FileWriter writer = new FileWriter(vocabPrefix + classifier + "/" + value + "/" + vocabFile);
+            for (String word: vocab) {
+                writer.write(word + " ");
+            }
+            writer.close();
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     /**

@@ -1,3 +1,5 @@
+package classifier;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -8,7 +10,7 @@ import static java.lang.System.*;
 
 /**
  * Created by Gerwin on 1-12-2015.
- * Tokenizer for the Interactive Learner
+ * classifier.Tokenizer for the Interactive Learner
  */
 public class Tokenizer {
 
