@@ -17,7 +17,7 @@ public class Tokenizer {
     private static final String testSentence = "This is a sentence, for testing !!! the tokenizer. So this sentence tests the tokenizer!!!!";
 
     public static void main(String[] args) {
-        List<String> tokens = tokenize(testSentence);
+        LinkedList<String> tokens = tokenize(testSentence);
         out.println(tokens.toString());
         tokens = removeExtras(tokens);
         out.println(tokens.toString());
@@ -28,8 +28,8 @@ public class Tokenizer {
      * and deleting any punctuation.
      * @param string the String that has to be tokenized.
      */
-    public static List<String> tokenize(String string) {
-        List<String> tokenList = new LinkedList<>();
+    public static LinkedList<String> tokenize(String string) {
+        LinkedList<String> tokenList = new LinkedList<>();
         StringTokenizer stringTokenizer = new StringTokenizer(string);
         while(stringTokenizer.hasMoreTokens()) {
             String token = stringTokenizer.nextToken();
@@ -45,8 +45,8 @@ public class Tokenizer {
      * @param list the list from which the extra's have to be removed.
      * @return Returns the new list without all the extra's
      */
-    public static List<String> removeExtras(List<String> list) {
-        List<String> tempList = new LinkedList<>();
+    public static LinkedList<String> removeExtras(LinkedList<String> list) {
+        LinkedList<String> tempList = new LinkedList<>();
         for (String token : list) {
             if (!tempList.contains(token) && !findPunctuation(token)) {
                tempList.add(token);
