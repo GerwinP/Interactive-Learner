@@ -22,19 +22,12 @@ public class ClassifierTest {
     }
 
     private static void testVocab() {
-        List<String> words = classifier.textTokenizer();
-        System.out.println(words.toString());
-        try {
-            classifier.addToVocab(words, value);
-            System.out.println(classifier.getVocabList(value).toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
     }
 
     private static void testValuenames() throws IOException{
-        LinkedList<String> tokens = classifier.textTokenizer();
-        classifier.classify(tokens);
+       // LinkedList<String> tokens = classifier.textTokenizer();
+       // classifier.classify(tokens);
     }
 
     private static void testTokenizeAndClassify() {
