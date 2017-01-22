@@ -4,7 +4,6 @@
 public class Classifier {
 
     public static void main(String[] args) {
-        GUITest guiTest = new GUITest();
-        guiTest.main();
+        Controller controller = new Controller();
     }
 }
