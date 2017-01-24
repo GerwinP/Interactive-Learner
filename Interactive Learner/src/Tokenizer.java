@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  */
 public class Tokenizer {
 
-    private static final Pattern PUNCTUATION = Pattern.compile("[\\[,.?!@+-=_:/{}\"\\]]|[)]|[(]");
+    private static final Pattern PUNCTUATION = Pattern.compile("[\\[,.?!@+-=_:/{}\"\\]]|[)]|[(]|[><]");
 
     public static void main(String[] args) {
         String file = readFile("..\\blogs\\blogs\\F\\F-test1.txt");
@@ -119,7 +119,12 @@ public class Tokenizer {
         Iterator<String> iterator = keySet.iterator();
         while (iterator.hasNext()) {
             String word = iterator.next();
+            /*
             if (tokenMap.get(word) == 1 || tokenMap.get(word) == 2) {
+                iterator.remove();
+            }
+            */
+            if (tokenMap.get(word) < 20) {
                 iterator.remove();
             }
         }

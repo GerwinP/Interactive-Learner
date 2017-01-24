@@ -50,7 +50,7 @@ public class Controller implements ActionListener{
                 }
             }
         } else if (actionCommand.equals("Train")) {
-
+            learner.calcChiSquare();
         }
 
         /*
