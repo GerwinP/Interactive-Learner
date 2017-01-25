@@ -22,12 +22,12 @@ public class GUITest extends JPanel implements Observer{
     private JButton chooseFileButton;
     private JTextField fileDirectoryField;
     private JTextField classFileField;
-    private JTextField smoothingKField;
     private JTextField predictedClassField;
+    private JFormattedTextField smoothingKField;
 
     private JButton[] buttonList = {selectTrainDirectoryButton, trainButton, classifyButton, addClassNameButton, chooseFileButton};
 
-    public GUITest(Controller controller) {
+    public GUITest() {
         setup();
     }
 
@@ -55,6 +55,8 @@ public class GUITest extends JPanel implements Observer{
         directoryField.setText(text);
     }
 
+    public void setFileDirectoryField(String text) {fileDirectoryField.setText(text); }
+
     public String getDirectoryText() {
         return directoryField.getText();
     }
@@ -62,6 +64,8 @@ public class GUITest extends JPanel implements Observer{
     public String getClassName() {
         return nameOfTheClassTextField.getText();
     }
+
+    public String getFileDirectoryField() { return fileDirectoryField.getText(); }
 
     @Override
     public void update(Observable o, Object code) {

@@ -11,35 +11,7 @@ import java.util.regex.Pattern;
  */
 public class Tokenizer {
 
-    private static final Pattern PUNCTUATION = Pattern.compile("[\\[,.?!@+-=_:/{}\"\\]]|[)]|[(]|[><]");
-
-    public static void main(String[] args) {
-        String file = readFile("..\\blogs\\blogs\\F\\F-test1.txt");
-        System.out.println("");
-        file = removePunctuation(file);
-        System.out.println("Removing punctuation....");
-        System.out.println(file);
-        System.out.println("");
-        file = toLowerCase(file);
-        System.out.println("Removing uppercase letters....");
-        System.out.println(file);
-        String[] tokens = createTokens(file);
-        System.out.println("Tokenizing the file....");
-        System.out.println(Arrays.toString(tokens));
-        Map<String, Integer> tokenMap = countTokens(tokens);
-        System.out.println("Counting the tokens...");
-        System.out.println(tokenMap.toString());
-        tokenMap = removeStopWords(tokenMap);
-        System.out.println("Removing stopwords....");
-        System.out.println(tokenMap.toString());
-        System.out.println("Counting the tokens....");
-        System.out.println(tokenMap.size());
-        tokenMap = removeOnes(tokenMap);
-        System.out.println("Removing tokens that occur once....");
-        System.out.println(tokenMap.toString());
-        System.out.println("Counting the tokens....");
-        System.out.println(tokenMap.keySet().size());
-    }
+    private static final Pattern PUNCTUATION = Pattern.compile("[\\[,.?!@+-=_:/{}\"\\]]|[)]|[(]|[><~*]");
 
     public Map<String, Integer> tokenize(String filename) {
         // Read file to String
@@ -54,15 +26,13 @@ public class Tokenizer {
         Map<String, Integer> tokenMap = countTokens(tokens);
         // Remove stopwords as given on www.ranks.nl/stopwords
         tokenMap = removeStopWords(tokenMap);
-        // Remove tokens that occur once or twice
-        tokenMap = removeOnes(tokenMap);
         // Remove single character words
         tokenMap = removeSingleChar(tokenMap);
         // Return the tokenMap
         return tokenMap;
     }
 
-    public static String readFile(String filename) {
+    private static String readFile(String filename) {
         String file = "";
         Path path = Paths.get(filename);
         try {
@@ -75,22 +45,22 @@ public class Tokenizer {
         return file;
     }
 
-    public static String removePunctuation(String file) {
+    private static String removePunctuation(String file) {
         file = PUNCTUATION.matcher(file).replaceAll("");
         return file;
     }
 
-    public static String toLowerCase(String file) {
+    private static String toLowerCase(String file) {
         file = file.toLowerCase();
         return file;
     }
 
-    public static String[] createTokens(String file) {
+    private static String[] createTokens(String file) {
         String[] tokens = file.split("\\s+");
         return tokens;
     }
 
-    public static Map<String, Integer> countTokens(String[] tokens) {
+    private static Map<String, Integer> countTokens(String[] tokens) {
         Map<String, Integer> tokenMap = new HashMap<String, Integer>();
         for (String word: tokens) {
             if(tokenMap.containsKey(word)) {
@@ -102,7 +72,7 @@ public class Tokenizer {
         return tokenMap;
     }
 
-    public static Map<String, Integer> removeStopWords(Map<String, Integer> tokenMap) {
+    private static Map<String, Integer> removeStopWords(Map<String, Integer> tokenMap) {
         Set<String> keySet = tokenMap.keySet();
         Iterator<String> iterator = keySet.iterator();
         while (iterator.hasNext()) {
@@ -114,24 +84,7 @@ public class Tokenizer {
         return tokenMap;
     }
 
-    public static Map<String, Integer> removeOnes(Map<String, Integer> tokenMap) {
-        Set<String> keySet = tokenMap.keySet();
-        Iterator<String> iterator = keySet.iterator();
-        while (iterator.hasNext()) {
-            String word = iterator.next();
-            /*
-            if (tokenMap.get(word) == 1 || tokenMap.get(word) == 2) {
-                iterator.remove();
-            }
-            */
-            if (tokenMap.get(word) < 20) {
-                iterator.remove();
-            }
-        }
-        return tokenMap;
-    }
-
-    public static Map<String, Integer> removeSingleChar(Map<String, Integer> tokenMap) {
+    private static Map<String, Integer> removeSingleChar(Map<String, Integer> tokenMap) {
         Set<String> keySet = tokenMap.keySet();
         Iterator<String> iterator = keySet.iterator();
         while (iterator.hasNext()) {
