@@ -5,6 +5,8 @@ import java.util.Set;
 
 /**
  * Created by Gerwin on 20-12-2016.
+ * A class that contains the most used stopwords in English.
+ * Words come from www.ranks.nl/stopwords
  */
 public class Utils {
 

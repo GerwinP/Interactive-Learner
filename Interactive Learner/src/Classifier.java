@@ -1,26 +1,39 @@
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observable;
 
 /**
- * Created by Gerwin on 21-12-2016.
+ * Created by Gerwin Puttenstein on 21-12-2016.
  */
-public class Classifier {
+public class Classifier extends Observable{
 
     private Learner learner;
     private Tokenizer tokenizer = new Tokenizer();
+    private Map<String, Integer> tokenMap;
 
+    /**
+     * The constructor of the Classifier
+     * It gets a Learner as an arguments, so the classifier always had the correct Learner.
+     * This means it can get the values and vocabularies from the Learner, and give the Learner new documents to add.
+     * @param learner, the Learner belonging to this Classifier
+     */
     public Classifier(Learner learner) {
         this.learner = learner;
     }
 
+    /**
+     * It predicts the class of the given file.
+     * This prediction in based on the prior and conditional probabilities calculated in the Learner
+     * @param filename, the location of the file to be classified
+     * @return the class of the given file
+     */
     public String predictClass(String filename) {
-        Map<String, Integer> tokenMap = tokenizer.tokenize(filename);
-        System.out.println("The length of the tokenmap: " + tokenMap.size());
+        tokenMap = new HashMap<>();
+        tokenMap = tokenizer.tokenize(filename);
         int count = 0;
         for (int i : tokenMap.values()) {
             count += i;
         }
-        System.out.println("Word amount is: " + count);
         Map<String, Double> probMap = new HashMap<String, Double>();
         for(String classifier : learner.getPriorProb().keySet()) {
             Map<String, Double> wordCondProb = learner.getClassCondProb(classifier);
@@ -33,26 +46,37 @@ public class Classifier {
             probMap.put(classifier, classProb);
         }
         Map.Entry<String, Double> maxEntry = null;
-        System.out.println("The probmap is: " + probMap.toString());
         for (Map.Entry<String, Double> entry : probMap.entrySet()) {
             if (maxEntry == null || entry.getValue().compareTo(maxEntry.getValue()) > 0) {
                 maxEntry = entry;
             }
         }
         String predictedClass = maxEntry.getKey() == null ? "" : maxEntry.getKey();
-        System.out.println("The predicted class = " + predictedClass);
+        setChanged();
+        Codes code = Codes.CLASSIFIED;
+        code.setArg(predictedClass);
+        notifyObservers(code);
         return predictedClass;
     }
 
-    private void removeRange(Map<String, Integer> tokenMap) {
-        double minPercent = learner.getMinPercent();
-        double maxPercent = learner.getMaxPercent();
-        //int minCount = (int) Math.floor(minPercent * calculateWords(classifier)/documents.get(classifier));
-        //int maxCount = (int) Math.ceil(maxPercent * calculateWords(classifier)/documents.get(classifier));
-
+    /**
+     * Adds the given tokenMap of the new file to the vocabulary in the Learner.
+     * This is with the given classifier
+     * @param tokenMap, the map of tokens of the new file
+     * @param classifier, the class of the new file
+     */
+    private void addToVocab(Map<String, Integer> tokenMap, String classifier) {
+        learner.addToVocab(tokenMap, classifier);
     }
 
-    private void removeOnChiSquare(Map<String, Integer> tokenMap) {
-
+    /**
+     * Retrains the learner after adding the new tokens to the vocabulary
+     * @param classifier, the name of the class for which the tokens should be added
+     */
+    public void updateLearner(String classifier) {
+        addToVocab(tokenMap, classifier);
+        learner.reTrain();
+        setChanged();
+        notifyObservers(Codes.VERIFIED);
     }
 }

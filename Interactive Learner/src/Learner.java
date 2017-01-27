@@ -6,85 +6,124 @@ import java.util.stream.IntStream;
 import static java.lang.Math.*;
 
 /**
- * Created by Gerwin on 21-12-2016.
+ * Created by Gerwin Puttenstein on 21-12-2016.
  */
 public class Learner extends Observable {
 
+    // The class that tokenizes a given file to a map of tokens
     private Tokenizer tokenizer = new Tokenizer();
+    // The vocabulary, it is a mapping of the class names with their map of words.
     private Map<String, Map<String, Integer>> vocab = new HashMap<String, Map<String, Integer>>();
-    private Map<String, Map<String, Integer>> chiMap = new HashMap<String, Map<String, Integer>>();
+    // A mapping of the class names and their word count
     private Map<String, Integer> wordCount = new HashMap<String, Integer>();
     // A map that contains the class name as a key and the amount of documents used for training as key
     private Map<String, Integer> documents = new HashMap<String, Integer>();
 
+    // The mapping of the class names and their prior probabilities
     private Map<String, Double> priorProb = new HashMap<String, Double>();
+    // The mapping of the class names and their maps of words with their conditional probabilities
     private Map<String, Map<String, Double>> condProb = new HashMap<String, Map<String, Double>>();
 
     // Critical value chi-squared. It is the value for P(Chi^2 >= c) = alpha
     // Where alpha is 0,001 and 1 degree of freedom, because of the 2 class corpus that were used in testing.
     private final double criticalValue = 10.83;
 
+    // The min and max percentage used to calculate the really low count words
+    // and the really high count words and remove these.
     private final double minPercent = 0.05;
     private final double maxPercent = 0.7;
 
     // The smoothing k for calculating probabilities, default k=1
     private int smoothingK = 1;
 
-    public void addToVocab(String path, String classifier) {
+    /**
+     * The constructor for the Learner.
+     * A new Learner is constructed with a given smoothing K value, which is used for calculating the conditional probabilities
+     * @param smoothingK, the value for the smoothing K
+     */
+    public Learner(int smoothingK) {
+        this.smoothingK = smoothingK;
+    }
+
+    /**
+     * Adds a map of tokens to the vocabulary of a given class.
+     * The map is already tokenized.
+     * @param tokenMap, the tokenized version of a file
+     * @param classifier, the class to which the tokenMap belongs to
+     */
+    public void addToVocab(Map<String, Integer> tokenMap, String classifier) {
+        Set<String> keys = tokenMap.keySet();
+        if (vocab.get(classifier) == null) {
+            vocab.put(classifier, tokenMap);
+        } else {
+            for (String word : keys) {
+                if (vocab.get(classifier).containsKey(word)) {
+                    vocab.get(classifier).put(word, vocab.get(classifier).get(word)+tokenMap.get(word));
+                } else {
+                    vocab.get(classifier).put(word, tokenMap.get(word));
+                }
+            }
+        }
+    }
+
+    /**
+     * Adds all files in the gives path to the vocabulary, while first tokenizing these values.
+     * Also notifies its observers (the GUI) to let it know it started adding the files and to notify is when it is done
+     * @param path, the directory location of the files.
+     * @param classifier, the class the files belong to
+     */
+    public void addAll(String path, String classifier) {
         File dir = new File(path);
         File[] directoryListing = dir.listFiles();
         documents.put(classifier, directoryListing.length);
         if (directoryListing != null) {
             setChanged();
             notifyObservers(Codes.ADDING);
-            Map<String, Integer> classVocab = new HashMap<>();
-            boolean first = true;
             for (File child : directoryListing) {
                 String filename = child.getAbsolutePath();
                 Map<String, Integer> tokenMap = tokenizer.tokenize(filename);
-                if (first) {
-                    classVocab = tokenMap;
-                    first=false;
-                } else {
-                    Set<String> keys = tokenMap.keySet();
-                    for (String word : keys) {
-                        if (classVocab.containsKey(word)) {
-                            classVocab.put(word, classVocab.get(word)+tokenMap.get(word));
-                        } else {
-                            classVocab.put(word, tokenMap.get(word));
-                        }
-                    }
-                }
+                addToVocab(tokenMap, classifier);
             }
-            vocab.put(classifier, classVocab);
             setChanged();
             notifyObservers(Codes.ADDED);
-            System.out.println("Done adding!");
-            System.out.println(vocab.toString());
         } else {
             setChanged();
             notifyObservers(Codes.ERROR);
         }
     }
 
-    public boolean learn(String path) {
-        boolean returnVal = false;
-        File dir = new File(path);
-        File[] directoryListing = dir.listFiles();
-        if (directoryListing != null) {
-            for (File child : directoryListing) {
-                String filename = child.getAbsolutePath();
-                Map<String, Integer> tokenMap = tokenizer.tokenize(filename);
-                System.out.println(tokenMap.toString());
-            }
-        } else {
-            // dir is not really a directory
-            return returnVal;
-        }
-        return returnVal;
+    /**
+     * Trains the interactive learner.
+     * This is done by first removing a certain range of words, these are words that or occur very often, or very little
+     * After that, it removes words based on their chi-square values
+     * And it calculates the prior and conditional probabilities.
+     */
+    public void train() {
+        setChanged();
+        notifyObservers(Codes.TRAINING);
+        removeRange();
+        removeOnChiSquare();
+        calculateProbs();
+        setChanged();
+        notifyObservers(Codes.TRAINED);
     }
 
-    public void calculateProbs() {
+    /**
+     * Retrains the interactive learner.
+     * This is done by removing words based on their chi-square values and recalculating the prior
+     * and conditional probabilities
+     */
+    public void reTrain() {
+        removeOnChiSquare();
+        calculateProbs();
+    }
+
+    /**
+     * Calculates the prior probabilities of every class in the vocabulary
+     * Also calculates the conditional probabilities of every word in the vocabulary.
+     * It saves these values in global Maps
+     */
+    private void calculateProbs() {
         // Calculate the prior probability of every class
         int total = 0;
         for (int value : documents.values()) {
@@ -114,7 +153,7 @@ public class Learner extends Observable {
      * Calculates the Chi square value of all the words in the vocabulary
      * @return A Map of all the words with their respective chi square value.
      */
-    public Map<String, Double> calcChiSquare() {
+    private Map<String, Double> calcChiSquare() {
         for (String className : vocab.keySet()) {
             wordCount.put(className, calculateWords(className));
         }
@@ -127,7 +166,13 @@ public class Learner extends Observable {
         return chiMapping;
     }
 
-    public Double calcChiSquare(String word) {
+    /**
+     * Calculates the chi-square value of a given word.
+     * This uses the already filled vocabulary and uses this to calculate all the necessary values
+     * @param word, the word the chi-square value is to be calculated of
+     * @return the chi-square value of the given word.
+     */
+    private Double calcChiSquare(String word) {
         double chiSquare = 0;
         Set<String> classSet = vocab.keySet();
         for (String className : classSet) {
@@ -204,7 +249,7 @@ public class Learner extends Observable {
      * Removes the words from the vocabulary that have a value lower than the critical value set.
      * Because if they have a Chi square value lower than the critical value, they are not unique enough for a given class
      */
-    public void removeOnChiSquare() {
+    private void removeOnChiSquare() {
         Map<String, Double> chiMapping = calcChiSquare();
         for (String className : vocab.keySet()) {
             int i = 0;
@@ -218,17 +263,14 @@ public class Learner extends Observable {
                 }
             }
         }
-        for (String classifier : vocab.keySet()) {
-            System.out.println("The word list for class " + classifier + " consists of " + calculateWords(classifier));
-            System.out.println("And has " + vocab.get(classifier).keySet().size() + " different words");
-        }
     }
 
     /**
      * Remove a certain range of words based on the minPercent and maxPercent given.
      * This method removes the words that don't occur often or occur a lot.
+     * This is to improve performance during the initial training.
      */
-    public void removeRange() {
+    private void removeRange() {
         for (String classifier : vocab.keySet()) {
             int minCount = (int) Math.floor(minPercent * calculateWords(classifier)/documents.get(classifier));
             int maxCount = (int) Math.ceil(maxPercent * calculateWords(classifier)/documents.get(classifier));
@@ -243,43 +285,36 @@ public class Learner extends Observable {
                 }
             }
         }
-
     }
 
+    /**
+     * Set the smoothing K value used in calculating the conditional probabilities
+     * Will be 1 most of the time, but is changeable for testing
+     * @param k, the new value of the smoothing k value.
+     */
     public void setK(int k) {
         this.smoothingK = k;
     }
 
+    /**
+     * Returns the map with the prior probabilities as the values and the keys are the classes that were trained
+     * @return a map of the classes and their prior probabilities
+     */
     public Map<String, Double> getPriorProb() {
         return this.priorProb;
     }
 
-    public Map<String, Map<String, Double>> getCondProb() {
-        return this.condProb;
-    }
-
-    public double getMinPercent() { return this.minPercent; }
-
-    public double getMaxPercent() { return this.maxPercent; }
-
+    /**
+     * A method that returns the prior probability of a given class
+     * @param classifier, the class from which the prior probability is requested
+     * @return the prior probability of the given classifier.
+     */
     public double getClassPriorProb(String classifier) { return this.priorProb.get(classifier); }
 
-    public Map<String, Double> getClassCondProb(String classifier) { return this.condProb.get(classifier); }
-
     /**
-     * Sorts a map by its values
-     * @param map, the map to be sorted
-     * @return returns the sorted map
+     * Gets the map with the conditional probabilities of a given class
+     * @param classifier, the class from which the map with conditional probabilities is requested
+     * @return a map with words as keys and their respective conditional probabilities as the values
      */
-    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
-        return map.entrySet()
-                .stream()
-                .sorted(Map.Entry.comparingByValue(Collections.reverseOrder()))
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (e1, e2) -> e1,
-                        LinkedHashMap::new
-                ));
-    }
+    public Map<String, Double> getClassCondProb(String classifier) { return this.condProb.get(classifier); }
 }

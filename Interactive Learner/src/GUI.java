@@ -1,115 +1,96 @@
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
+import java.util.Observable;
+import java.util.Observer;
 
 /**
- * Created by Gerwin on 21-12-2016.
+ * Created by Gerwin Puttenstein on 21-Jan-17.
  */
-public class GUI extends JPanel{
+public class GUI extends JPanel implements Observer{
 
-    private static final int extraWindowWidth = 100;
-    private JButton choosePathButton;
-    private JButton classifyButton;
+    private JTabbedPane tabbedPane1;
+    private JTextField directoryField;
+    private JTextField nameOfTheClassTextField;
+    private JTextArea classValues;
+    private JPanel mainPanel;
+    private JFrame frame;
+
+    private JButton selectTrainDirectoryButton;
     private JButton trainButton;
-    private JTextField pathField = new JTextField(40);
-    private JTextArea classList = new JTextArea();
-    private JTextField classField = new JTextField(20);
-    private GUIController controller = new GUIController();
+    private JButton classifyButton;
+    private JButton addClassNameButton;
+    private JButton chooseFileButton;
+    private JTextField fileDirectoryField;
+    private JTextField classFileField;
+    private JTextField predictedClassField;
+    private JFormattedTextField smoothingKField;
+    private JButton updateSmoothingKButton;
+    private JButton yesButton;
+    private JButton noButton;
 
-    private void addComponentToPane(Container pane) {
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Learner", createTab1());
-        tabbedPane.addTab("Classifier", createTab2());
-        pane.add(tabbedPane, BorderLayout.PAGE_START);
+    private JButton[] buttonList = {selectTrainDirectoryButton, trainButton, classifyButton, addClassNameButton, chooseFileButton, updateSmoothingKButton, yesButton, noButton};
+
+    public GUI() {
+        setup();
     }
 
-    private JPanel createTab1() {
-        /*
-        JPanel card1 = new JPanel() {
-            public Dimension getPreferredSize() {
-                Dimension size = super.getPreferredSize();
-                size.width += extraWindowWidth;
-                return size;
-            }
-        };
-        */
-        JPanel card1 = new JPanel();
-        card1.setPreferredSize(new Dimension(240, 320));
-        BorderLayout borderLayout = new BorderLayout(5,5);
-        card1.setLayout(borderLayout);
-        choosePathButton = new JButton("Choose train directory");
-        choosePathButton.addActionListener(controller);
-        pathField.setEditable(false);
-        classifyButton = new JButton("Classify files");
-        classifyButton.addActionListener(controller);
-        card1.add(choosePathButton, BorderLayout.PAGE_START);
-        card1.add(pathField, BorderLayout.PAGE_START);
-        card1.add(classField, BorderLayout.CENTER);
-        card1.add(classifyButton, BorderLayout.CENTER);
-        card1.add(classList, BorderLayout.PAGE_END);
-        return card1;
+    private void setup() {
+        frame = new JFrame("Interactive Learner");
+        frame.setContentPane(this.mainPanel);
+        mainPanel.setPreferredSize(new Dimension(600,320));
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setResizable(false);
     }
 
-    private JPanel createTab2() {
-        JPanel card2 = new JPanel();
-        card2.add(new JTextField("Textfield", 40));
-        return card2;
+    public JButton[] getButtonList() { return this.buttonList;}
+
+    public void showGUI() {
+        frame.setVisible(true);
     }
 
-    private static void createAndShowGUI() {
-        JFrame classifierFrame = new JFrame("Tabs");
-        classifierFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        GUI gui = new GUI();
-        gui.addComponentToPane(classifierFrame.getContentPane());
-        classifierFrame.pack();
-        classifierFrame.setLocationRelativeTo(null);
-        classifierFrame.setVisible(true);
+    public void updateTextArea(String text) {
+        classValues.append(text + "\n");
     }
 
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-        } catch (UnsupportedLookAndFeelException | IllegalAccessException | InstantiationException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                createAndShowGUI();
-            }
-        });
+    public void setDirectoryField(String text) {
+        directoryField.setText(text);
     }
 
-    public class GUIController implements ActionListener {
+    public void setFileDirectoryField(String text) {fileDirectoryField.setText(text); }
 
-        private JFileChooser chooser = new JFileChooser();
-        private Learner learner = new Learner();
+    public void setPredictedClassField(String text) { predictedClassField.setText(text); }
 
-        public GUIController() {
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            //TODO remove testDir. This is just for testing.
-            File testDir = new File("C:\\Development\\Interactive Learner\\");
-            chooser.setCurrentDirectory(testDir);
-        }
+    public String getDirectoryText() {
+        return directoryField.getText();
+    }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == choosePathButton) {
-                int returnVal = chooser.showOpenDialog(GUI.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = chooser.getSelectedFile();
-                    pathField.setText(file.getAbsolutePath());
-                }
-            } else if(e.getSource() == classifyButton) {
-                if (pathField.getText() != null || !pathField.getText().equals("")) {
-                    learner.learn(pathField.getText());
-                } else {
-                    // Pathfield is still empty
-                }
+    public String getClassName() {
+        return nameOfTheClassTextField.getText();
+    }
 
+    public String getFileDirectoryField() { return fileDirectoryField.getText(); }
+
+    public int getSmoothingK() throws NumberFormatException{
+        return Integer.parseInt(smoothingKField.getText());
+    }
+
+    public String getPredictedClassField() { return predictedClassField.getText(); }
+
+    public String getClassFileField() { return classFileField.getText(); }
+
+    @Override
+    public void update(Observable o, Object code) {
+        if (code instanceof Codes) {
+            switch ((Codes)code) {
+                case ADDING: updateTextArea("Adding new class.... Please wait...."); break;
+                case ADDED: updateTextArea("Added new class " + getClassName()); break;
+                case CLASSIFIED: setPredictedClassField(((Codes) code).getArg()); break;
+                case TRAINING: updateTextArea("Training....Please wait...."); break;
+                case TRAINED: updateTextArea("Trained the given classes, you can now start classifying."); break;
+                case VERIFIED: setPredictedClassField(""); break;
+                case ERROR: ;
             }
         }
     }
