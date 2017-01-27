@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.Scanner;
 
 /**
- * Created by Gerwin on 26-1-2017.
+ * Created by Gerwin Puttenstein on 26-1-2017.
+ * The class is used for training and classifying a lot of files at once.
+ * This is done to get some performance measurements from several corpus more quickly.
  */
 public class TestPerformance {
 
@@ -15,13 +17,19 @@ public class TestPerformance {
     private List<Integer> correctList = new LinkedList<>();
     private List<Integer> correctMailList = new LinkedList<>();
 
+    /**
+     * Constructor that runs all the training and test methods.
+     */
     public TestPerformance() {
         this.trainBlog();
-        //this.testBlog();
+        this.testBlog();
         this.trainMail();
-        //this.testMail();
+        this.testMail();
     }
 
+    /**
+     * Trains a Learner with a Classifier with the blogs corpus
+     */
     private void trainBlog() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Please provide location of first class: ");
@@ -43,6 +51,11 @@ public class TestPerformance {
         System.out.println("Done training the interactive learner");
     }
 
+    /**
+     * Predicts the class of every file in the given directory for the blog corpus.
+     * After every file you have to say whether it is correctly predicted or not.
+     * After it is done predicting all the files, it gives some statistics on the amount of correct and incorrect predictions.
+     */
     private void testBlog() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Now the learning and prediction phase starts.");
@@ -76,6 +89,9 @@ public class TestPerformance {
         System.out.println("The amount of not correct predicted classes was: " + notCorrect);
     }
 
+    /**
+     * Trains a Learner with a Classifier with the mails corpus
+     */
     private void trainMail() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("");
@@ -104,6 +120,12 @@ public class TestPerformance {
         System.out.println("Done training the interactive learner");
     }
 
+    /**
+     * Predicts the class of every file in the given directory for the mail corpus.
+     * Based on the name of the file, it will check whether or not it predicted the class correctly.
+     * This can be done, because the ham and spam messages have very distinct names.
+     * After it is done predicting all the files, it gives some statistics on the amount of correct and incorrect predictions.
+     */
     private void testMail() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("Now the learning and prediction phase starts.");

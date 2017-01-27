@@ -28,10 +28,6 @@ public class InteractiveLearner implements ActionListener{
         for (JButton button : buttonList) {
             button.addActionListener(this);
         }
-        //TODO remove testDir. This is just for testing.
-        File testDir = new File("C:\\Users\\Gerwin\\IdeaProjects\\Interactive_Learner\\");
-        dirChooser.setCurrentDirectory(testDir);
-        fileChooser.setCurrentDirectory(testDir);
     }
 
     @Override
